@@ -2,3 +2,6 @@
 !/temp/.gitkeep
 /coverage
 /.vscode
+.env
+ormconfig.json
+/temp

@@ -18,6 +18,7 @@ class UpdateUserAvatarService {
     constructor(
         @inject('UsersRepository')
         private userRepository: IUsersRepository,
+
         @inject('StorageProvider')
         private storageProvider: IStorageProvider
     ){}
@@ -30,6 +31,9 @@ class UpdateUserAvatarService {
                 401,
             );
         }
+
+
+
         if (user.avatar) {
             await this.storageProvider.deleteFile(user.avatar);
         }

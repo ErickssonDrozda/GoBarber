@@ -1,4 +1,3 @@
-import { compare } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { injectable, inject } from 'tsyringe';
 
@@ -23,6 +22,7 @@ class AuthenticateUserService {
     constructor(
         @inject('UsersRepository')
         private userRepository: IUsersRepository,
+
         @inject('HashProvider')
         private hashProvider: IHashProvider,
     ){}
@@ -41,6 +41,7 @@ class AuthenticateUserService {
         }
 
         const { secret, expiresIn } = authConfig.jwt;
+
 
         const token = sign({}, secret, {
             subject: user.id,
