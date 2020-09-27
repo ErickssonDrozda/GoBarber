@@ -2,6 +2,7 @@ import { injectable, inject } from 'tsyringe';
 
 import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 import IAppointmentsRepository from '@modules/appointments/repositories/IAppointmentsRepository';
+import { classToClass } from 'class-transformer';
 import Appointment from '../infra/typeorm/entities/Appointment';
 
 interface IRequest {
@@ -13,31 +14,41 @@ interface IRequest {
 
 @injectable()
 class ListProviderAppointmentsService {
-  constructor(
-    @inject("AppointmentsRepository")
-    private appointmentsRepository: IAppointmentsRepository,
+    constructor(
+        @inject('AppointmentsRepository')
+        private appointmentsRepository: IAppointmentsRepository,
 
-    @inject("CacheProvider")
-    private cacheProvider: ICacheProvider,
-  ){}
+        @inject('CacheProvider')
+        private cacheProvider: ICacheProvider,
+    ) {}
 
-  public async execute({
-    providerId, day, month, year,
-  }: IRequest): Promise<Appointment[]> {
-      const cacheKey = `provider-appointments:${providerId}:${year}-${month}-${day}`;
+    public async execute({
+        providerId,
+        day,
+        month,
+        year,
+    }: IRequest): Promise<Appointment[]> {
+        const cacheKey = `provider-appointments:${providerId}:${year}-${month}-${day}`;
 
-      let appointments = await this.cacheProvider.recover<Appointment[]>(cacheKey);
+        let appointments = await this.cacheProvider.recover<Appointment[]>(
+            cacheKey,
+        );
 
-      if(!appointments){
-          appointments = await this.appointmentsRepository.findAllInDayFromProvider({
-              providerId, day, month, year,
-            });
+        if (!appointments) {
+            appointments = await this.appointmentsRepository.findAllInDayFromProvider(
+                {
+                    providerId,
+                    day,
+                    month,
+                    year,
+                },
+            );
 
-            await this.cacheProvider.save(cacheKey, appointments);
+            await this.cacheProvider.save(cacheKey, classToClass(appointments));
         }
 
-    return appointments;
-  }
+        return appointments;
+    }
 }
 
 export default ListProviderAppointmentsService;

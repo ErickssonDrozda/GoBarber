@@ -3,20 +3,28 @@ import React, {
 } from 'react';
 import api from '../services/api';
 
+interface User{
+    id: string;
+    avatarUrl: string;
+    email: string;
+    name: string;
+}
+
 interface SignInCredentials {
     email: string;
     password: string;
 }
 
 interface AuthContextProps {
-    user: object; //eslint-disable-line
+    user: User; //eslint-disable-line
     signIn(credentials: SignInCredentials): Promise<void>;
     signOut(): void;
+    updateUser(user: User): void;
 }
 
 interface AuthState {
     token: string;
-    user: object; //eslint-disable-line
+    user: User; //eslint-disable-line
 }
 
 const AuthContext = createContext<AuthContextProps>({} as AuthContextProps);
@@ -24,9 +32,6 @@ const AuthContext = createContext<AuthContextProps>({} as AuthContextProps);
 export function useAuth(): AuthContextProps {
   const context = useContext(AuthContext);
 
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
   return context;
 }
 
@@ -36,6 +41,7 @@ export const AuthProvider: React.FC = ({ children }) => {
     const user = localStorage.getItem('@GoBarber:user');
 
     if (token && user) {
+      api.defaults.headers.authorization = `Bearer ${token}`;
       return { token, user: JSON.parse(user) };
     }
 
@@ -43,8 +49,8 @@ export const AuthProvider: React.FC = ({ children }) => {
   });
 
   const signOut = useCallback(() => {
-    const token = localStorage.removeItem('@GoBarber:token');
-    const user = localStorage.removeItem('@GoBarber:user');
+    localStorage.removeItem('@GoBarber:token');
+    localStorage.removeItem('@GoBarber:user');
 
     setData({} as AuthState);
   }, []);
@@ -56,11 +62,26 @@ export const AuthProvider: React.FC = ({ children }) => {
     localStorage.setItem('@GoBarber:token', token);
     localStorage.setItem('@GoBarber:user', JSON.stringify(user));
 
+    api.defaults.headers.authorization = `Bearer ${token}`;
+
     setData({ token, user });
   }, []);
 
+  const updateUser = useCallback((user: User) => {
+    const { token } = data;
+    setData({
+      token,
+      user,
+    });
+
+    localStorage.setItem('@GoBarber:user', JSON.stringify(user));
+  }, [setData, data]);
+
   return (
-    <AuthContext.Provider value={{ user: data.user, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      user: data.user, signIn, signOut, updateUser,
+    }}
+    >
       {children}
     </AuthContext.Provider>
   );

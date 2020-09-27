@@ -3,17 +3,20 @@ import { container } from 'tsyringe';
 
 import ListProviderDayAvailabilityService from '@modules/appointments/services/ListProviderDayAvailabilityService';
 
-
 export default class ProviderDayAvailabilityController {
+    public async index(req: Request, res: Response): Promise<Response> {
+        const { providerId } = req.params;
+        const { day, month, year } = req.query;
 
-    public async index(req:  Request, res: Response): Promise<Response> {
-        const providerId = req.params.providerId;
-        const { day, month, year } = req.body;
-
-        const listProviderDayAvailability = container.resolve(ListProviderDayAvailabilityService);
+        const listProviderDayAvailability = container.resolve(
+            ListProviderDayAvailabilityService,
+        );
 
         const availability = await listProviderDayAvailability.execute({
-            providerId, day, month, year
+            providerId,
+            day: Number(day),
+            month: Number(month),
+            year: Number(year),
         });
 
         return res.json(availability);

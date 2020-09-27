@@ -38,6 +38,7 @@ const SignUp: React.FC = () => {
           email: Yup.string().required('Email is required').email('Please, type a valid email'),
           password: Yup.string().min(6, 'Password must content 6 digits or more'),
         });
+
         await schema.validate(data, {
           abortEarly: false,
         });
@@ -59,10 +60,16 @@ const SignUp: React.FC = () => {
             return;
       }
 
+      let description = '';
+
+      if (error.request.responseText === '{"status":"error","message":"Email Address already used"}') {
+        description = 'This email already used. please, try other.';
+      }
+
       addToast({
         type: 'error',
         title: 'Registration failed',
-        description: 'something went wrong. please, check your credentials.',
+        description: description || 'something went wrong. please, check your credentials.',
       });
     }
   }, [addToast, history]);

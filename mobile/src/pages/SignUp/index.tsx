@@ -48,21 +48,15 @@ const SignUp: React.FC = () => {
         await schema.validate(data, {
           abortEarly: false,
         });
-        console.log('1');
 
         await api.post('/users', data);
-
-        console.log('2');
 
         Alert.alert(
           'Successfully registered',
           'Now you can login on application',
         );
-        console.log('3');
         navigation.goBack();
-        console.log('4');
       } catch (error) {
-        console.log(error);
         if (error instanceof Yup.ValidationError) {
           const errors = getValidationErros(error);
           formRef.current?.setErrors(errors); //eslint-disable-line

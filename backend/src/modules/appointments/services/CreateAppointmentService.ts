@@ -2,10 +2,10 @@ import { startOfHour, isBefore, getHours, format } from 'date-fns';
 import { injectable, inject } from 'tsyringe';
 
 import AppError from '@shared/errors/AppError';
-import Appointment from '../infra/typeorm/entities/Appointment';
-import IAppointmentsRepository from '../repositories/IAppointmentsRepository';
 import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 import INotficationsRepository from '@modules/notifications/repositories/INotficationsRepository';
+import Appointment from '../infra/typeorm/entities/Appointment';
+import IAppointmentsRepository from '../repositories/IAppointmentsRepository';
 
 interface IRequest {
     providerId: string;
@@ -22,32 +22,40 @@ class CreateAppointmentService {
         @inject('NotificationsRepository')
         private notificationsRepository: INotficationsRepository,
 
-        @inject("CacheProvider")
+        @inject('CacheProvider')
         private cacheProvider: ICacheProvider,
-    ){}
+    ) {}
 
-    public async execute({ date, providerId, userId }: IRequest): Promise<Appointment> {
-
+    public async execute({
+        date,
+        providerId,
+        userId,
+    }: IRequest): Promise<Appointment> {
         const appointmentDate = startOfHour(date);
 
-        if(isBefore(appointmentDate, Date.now())){
-            throw new AppError("You can't create an appointment on a past date");
+        if (isBefore(appointmentDate, Date.now())) {
+            throw new AppError(
+                "You can't create an appointment on a past date",
+            );
         }
 
-        if(userId === providerId){
+        if (userId === providerId) {
             throw new AppError("You can't create an appointment with yourself");
         }
 
         const findAppointmentsInSameDate = await this.appointmentsRepository.findByDate(
             appointmentDate,
+            providerId,
         );
 
         if (findAppointmentsInSameDate) {
             throw new AppError('This appointment is already booked');
         }
 
-        if(getHours(appointmentDate) < 8 || getHours(appointmentDate) > 17){
-            throw new AppError("You can only create appointment between 8am and 5pm");
+        if (getHours(appointmentDate) < 8 || getHours(appointmentDate) > 17) {
+            throw new AppError(
+                'You can only create appointment between 8am and 5pm',
+            );
         }
 
         const appointment = await this.appointmentsRepository.create({
@@ -64,7 +72,10 @@ class CreateAppointmentService {
         });
 
         await this.cacheProvider.invalidate(
-            `provider-appointments:${providerId}:${format(appointmentDate, 'yyyy-M-d')}`
+            `provider-appointments:${providerId}:${format(
+                appointmentDate,
+                'yyyy-M-d',
+            )}`,
         );
 
         return appointment;

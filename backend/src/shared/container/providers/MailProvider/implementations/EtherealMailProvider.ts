@@ -7,10 +7,11 @@ import IMailTemplateProvider from '../../MailTemplateProvider/models/IMailTempla
 @injectable()
 export default class EtherealMailProvider implements IMailProvider {
     private client: Transporter;
+
     constructor(
-        @inject("MailTemplateProvider")
+        @inject('MailTemplateProvider')
         private mailTemplateProvider: IMailTemplateProvider,
-    ){
+    ) {
         nodemailer.createTestAccount().then(account => {
             const transporter = nodemailer.createTransport({
                 host: account.smtp.host,
@@ -18,18 +19,23 @@ export default class EtherealMailProvider implements IMailProvider {
                 secure: account.smtp.secure,
                 auth: {
                     user: account.user,
-                    pass: account.pass
+                    pass: account.pass,
                 },
             });
             this.client = transporter;
         });
     }
 
-    public async sendMail({ to, from, template, subject}: ISendMailDTO): Promise<void> {
+    public async sendMail({
+        to,
+        from,
+        template,
+        subject,
+    }: ISendMailDTO): Promise<void> {
         const message: any = await this.client.sendMail({
             from: {
                 name: from?.name || 'Equipe Go Barber',
-                address: from?.email || 'equipe@gobarber.com.br'
+                address: from?.email || 'equipe@gobarber.com.br',
             },
             to: {
                 name: to.name,
